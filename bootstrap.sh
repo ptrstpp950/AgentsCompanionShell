@@ -173,17 +173,19 @@ fi
 print_plan
 confirm
 
-install_args=()
-
-if [ -n "$rc_file" ]; then
-  install_args+=(--rc-file "$rc_file")
-fi
-
 if [ -n "$source_dir" ]; then
   cp -R "$source_dir"/. "$bootstrap_dir"
-  AGENTSCOMPANION_INSTALL_DIR="$install_dir" bash "$bootstrap_dir/install.sh" "${install_args[@]}"
+  if [ -n "$rc_file" ]; then
+    AGENTSCOMPANION_INSTALL_DIR="$install_dir" bash "$bootstrap_dir/install.sh" --rc-file "$rc_file"
+  else
+    AGENTSCOMPANION_INSTALL_DIR="$install_dir" bash "$bootstrap_dir/install.sh"
+  fi
 else
   download_file "${resolved_base_url%/}/install.sh" "$bootstrap_dir/install.sh"
   chmod +x "$bootstrap_dir/install.sh"
-  AGENTSCOMPANION_INSTALL_DIR="$install_dir" bash "$bootstrap_dir/install.sh" --base-url "$resolved_base_url" "${install_args[@]}"
+  if [ -n "$rc_file" ]; then
+    AGENTSCOMPANION_INSTALL_DIR="$install_dir" bash "$bootstrap_dir/install.sh" --base-url "$resolved_base_url" --rc-file "$rc_file"
+  else
+    AGENTSCOMPANION_INSTALL_DIR="$install_dir" bash "$bootstrap_dir/install.sh" --base-url "$resolved_base_url"
+  fi
 fi
