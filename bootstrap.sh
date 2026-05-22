@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# agentscompanion bootstrap version: 0.1.2
+# agentscompanion bootstrap version: 0.1.3
 
 set -euo pipefail
 
@@ -12,6 +12,7 @@ rc_file="${AGENTSCOMPANION_RC_FILE:-}"
 bootstrap_dir="$(mktemp -d "${TMPDIR:-/tmp}/agentscompanion-bootstrap.XXXXXX")"
 assume_yes="${AGENTSCOMPANION_ASSUME_YES:-0}"
 default_base_url="https://raw.githubusercontent.com/ptrstpp950/AgentsCompanionShell/master"
+installer_version="0.1.3"
 color_title=""
 color_heading=""
 color_note=""
@@ -82,6 +83,7 @@ describe_source() {
 print_plan() {
   printf '%bagentscompanion bootstrap%b\n\n' "$color_title" "$color_reset"
   printf '%bThis will:%b\n' "$color_heading" "$color_reset"
+  printf '  - use installer version %s\n' "$installer_version"
   printf '  - download installer files from %s\n' "$(describe_source)"
   printf '  - install agentscompanion into %s\n' "$install_dir"
 

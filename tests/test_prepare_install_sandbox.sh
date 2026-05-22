@@ -62,6 +62,11 @@ if [[ "$install_output" != *"This will:"* ]] || [[ "$install_output" != *"Contin
   exit 1
 fi
 
+if [[ "$install_output" != *"use installer version $(cat "$repo_dir/VERSION")"* ]]; then
+  printf 'Expected install output to include installer version, got:\n%s\n' "$install_output" >&2
+  exit 1
+fi
+
 for path in \
   "$SANDBOX_HOME/.agentscompanion/agentscompanion.sh" \
   "$SANDBOX_HOME/.agentscompanion/lib/tmux-launch.sh" \
