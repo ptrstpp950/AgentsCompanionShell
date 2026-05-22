@@ -10,6 +10,7 @@ install_dir="${AGENTSCOMPANION_INSTALL_DIR:-$HOME/.agentscompanion}"
 rc_file="${AGENTSCOMPANION_RC_FILE:-}"
 bootstrap_dir="$(mktemp -d "${TMPDIR:-/tmp}/agentscompanion-bootstrap.XXXXXX")"
 assume_yes="${AGENTSCOMPANION_ASSUME_YES:-0}"
+default_base_url="https://raw.githubusercontent.com/ptrstpp950/AgentsCompanionShell/master"
 color_title=""
 color_heading=""
 color_note=""
@@ -50,7 +51,7 @@ resolve_base_url() {
     return 0
   fi
 
-  return 1
+  printf '%s\n' "$default_base_url"
 }
 
 describe_source() {

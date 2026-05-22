@@ -27,7 +27,7 @@ AGENTSCOMPANION_INSTALL_DIR="$HOME/.agentscompanion" bash install.sh --rc-file "
 The installer already supports downloading files from a hosted base URL. The intended public flow is a GitHub raw URL:
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/OWNER/REPO/main/bootstrap.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/ptrstpp950/AgentsCompanionShell/master/bootstrap.sh)
 ```
 
 `bootstrap.sh` can then download `install.sh` and the runtime files from a GitHub raw base URL.
