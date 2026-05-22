@@ -206,6 +206,5 @@ update_rc_file
 print_tmux_note
 
 printf '\nInstallation complete.\n'
-printf 'Install location:\n  %s\n' "$install_dir"
-printf 'Shell rc file updated:\n  %s\n' "$rc_file"
-printf 'Next step:\n  source %q\n' "$rc_file"
+printf 'Use agentscompanion in this terminal:\n  source %q\n' "$rc_file"
+printf 'New terminals will load agentscompanion automatically.\n'
