@@ -217,6 +217,5 @@ ensure_rc_file
 update_rc_file
 print_tmux_note
 
-printf '\n%bInstallation complete.%b\n' "$color_success" "$color_reset"
+printf '\n%bInstallation complete.%b New terminals will load agentscompanion automatically.\n' "$color_success" "$color_reset"
 printf '%bUse agentscompanion in this terminal:%b\n  source %q\n' "$color_heading" "$color_reset" "$rc_file"
-printf 'New terminals will load agentscompanion automatically.\n'

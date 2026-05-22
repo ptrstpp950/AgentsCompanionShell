@@ -91,7 +91,7 @@ paste_output="$(
   bash -lc "$PASTE_ONE_LINER_YES"
 )"
 
-if [[ "$paste_output" != *"Installation complete."* ]] || [[ "$paste_output" != *"Use agentscompanion in this terminal:"* ]] || [[ "$paste_output" != *"New terminals will load agentscompanion automatically."* ]]; then
+if [[ "$paste_output" != *"Installation complete."* ]] || [[ "$paste_output" != *"Installation complete. New terminals will load agentscompanion automatically."* ]] || [[ "$paste_output" != *"Use agentscompanion in this terminal:"* ]]; then
   printf 'Expected in-shell one-liner to install successfully, got:\n%s\n' "$paste_output" >&2
   exit 1
 fi
