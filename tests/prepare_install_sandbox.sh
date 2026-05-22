@@ -5,6 +5,7 @@ set -euo pipefail
 repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 sandbox_root="$(mktemp -d "${TMPDIR:-/tmp}/agentscompanion-install-sandbox.XXXXXX")"
 shell_name="bash"
+open_shell=0
 
 join_command() {
   local quoted parts=()
@@ -20,16 +21,20 @@ join_command() {
 usage() {
   cat <<'EOF'
 Usage:
-  prepare_install_sandbox.sh [--shell bash|zsh]
+  prepare_install_sandbox.sh [--open-shell] [--shell bash|zsh]
 
 Create an isolated install sandbox that stages a fake HOME and a local release
-bundle. The script prints a copy-based one-liner you can paste to simulate the
-future install flow without using curl or wget.
+bundle. It can open a clean shell and print a short bootstrap-style one-liner
+you can paste to simulate the future install flow without using curl or wget.
 EOF
 }
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
+    --open-shell)
+      open_shell=1
+      shift
+      ;;
     --shell)
       shell_name="$2"
       shift 2
@@ -50,10 +55,14 @@ case "$shell_name" in
   bash)
     rc_file="$sandbox_root/home/.bashrc"
     verify_command=(bash --noprofile --norc -ic "source \"$rc_file\" && agentscompanion --version && type copilot")
+    session_rc="$sandbox_root/bash.sessionrc"
+    launch_shell_cmd=(bash --noprofile --rcfile "$session_rc" -i)
     ;;
   zsh)
     rc_file="$sandbox_root/home/.zshrc"
     verify_command=(zsh -f -ic "source \"$rc_file\" && agentscompanion --version && type copilot")
+    session_rc="$sandbox_root/zsh-session/.zshrc"
+    launch_shell_cmd=(zsh -i)
     ;;
   *)
     printf 'Error: unsupported shell: %s\n' "$shell_name" >&2
@@ -65,8 +74,9 @@ sandbox_home="$sandbox_root/home"
 release_dir="$sandbox_root/release"
 install_dir="$sandbox_home/.agentscompanion"
 bootstrap_script="$release_dir/bootstrap.sh"
+paste_one_liner='bash <(cat "$AGENTSCOMPANION_BOOTSTRAP_SCRIPT")'
 
-mkdir -p "$sandbox_home" "$release_dir/lib"
+mkdir -p "$sandbox_home" "$release_dir/lib" "$(dirname "$session_rc")"
 touch "$rc_file"
 
 cp "$repo_dir/bootstrap.sh" "$release_dir/bootstrap.sh"
@@ -84,6 +94,17 @@ verify_script="$(join_command "${verify_command[@]}")"
 printf -v verify_one_liner 'HOME=%q %s' "$sandbox_home" "$verify_script"
 printf -v cleanup_one_liner 'rm -rf %q' "$sandbox_root"
 
+cat >"$session_rc" <<EOF
+export AGENTSCOMPANION_LOCAL_SOURCE_DIR=$(printf '%q' "$release_dir")
+export AGENTSCOMPANION_INSTALL_DIR=$(printf '%q' "$install_dir")
+export AGENTSCOMPANION_RC_FILE=$(printf '%q' "$rc_file")
+export AGENTSCOMPANION_BOOTSTRAP_SCRIPT=$(printf '%q' "$bootstrap_script")
+
+printf 'Install sandbox shell ready. Paste this one-liner:\\n  %s\\n\\n' '$(printf '%s' "$paste_one_liner")'
+printf 'Then verify with:\\n  source %q\\n  agentscompanion --version\\n  type copilot\\n\\n' $(printf '%q' "$rc_file")
+printf 'Cleanup later with:\\n  %s\\n\\n' '$(printf '%s' "$cleanup_one_liner")'
+EOF
+
 cat <<EOF
 Install sandbox ready.
 
@@ -96,7 +117,13 @@ Staged release:
 Bootstrap script:
   $bootstrap_script
 
-Install one-liner:
+Open sandbox shell:
+  bash tests/prepare_install_sandbox.sh --open-shell$( [ "$shell_name" = "zsh" ] && printf ' --shell zsh' )
+
+Paste inside the sandbox shell:
+  $paste_one_liner
+
+Standalone install one-liner:
   $install_one_liner
 
 Verify after install:
@@ -110,7 +137,23 @@ SANDBOX_ROOT=$(printf '%q' "$sandbox_root")
 SANDBOX_HOME=$(printf '%q' "$sandbox_home")
 STAGED_RELEASE=$(printf '%q' "$release_dir")
 BOOTSTRAP_SCRIPT=$(printf '%q' "$bootstrap_script")
+PASTE_ONE_LINER=$(printf '%q' "$paste_one_liner")
 INSTALL_ONE_LINER=$(printf '%q' "$install_one_liner")
 VERIFY_ONE_LINER=$(printf '%q' "$verify_one_liner")
 CLEANUP_ONE_LINER=$(printf '%q' "$cleanup_one_liner")
 EOF
+
+if [ "$open_shell" -eq 1 ]; then
+  if ! command -v "$shell_name" >/dev/null 2>&1; then
+    printf 'Error: %s is not installed.\n' "$shell_name" >&2
+    exit 1
+  fi
+
+  printf '\nOpening sandbox shell...\n\n'
+
+  if [ "$shell_name" = "bash" ]; then
+    HOME="$sandbox_home" "${launch_shell_cmd[@]}"
+  else
+    HOME="$sandbox_home" ZDOTDIR="$(dirname "$session_rc")" "${launch_shell_cmd[@]}"
+  fi
+fi

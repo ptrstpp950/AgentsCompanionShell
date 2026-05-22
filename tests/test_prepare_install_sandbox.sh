@@ -14,7 +14,7 @@ trap cleanup EXIT
 bash "$repo_dir/tests/prepare_install_sandbox.sh" >"$output_file"
 
 eval "$(
-  grep -E '^(SANDBOX_ROOT|SANDBOX_HOME|STAGED_RELEASE|BOOTSTRAP_SCRIPT|INSTALL_ONE_LINER|VERIFY_ONE_LINER|CLEANUP_ONE_LINER)=' "$output_file"
+  grep -E '^(SANDBOX_ROOT|SANDBOX_HOME|STAGED_RELEASE|BOOTSTRAP_SCRIPT|PASTE_ONE_LINER|INSTALL_ONE_LINER|VERIFY_ONE_LINER|CLEANUP_ONE_LINER)=' "$output_file"
 )"
 
 for path in \
@@ -32,6 +32,11 @@ done
 
 if [[ "$INSTALL_ONE_LINER" != *"bash <("* ]]; then
   printf 'Expected install one-liner to use bash <(...), got:\n%s\n' "$INSTALL_ONE_LINER" >&2
+  exit 1
+fi
+
+if [ "$PASTE_ONE_LINER" != 'bash <(cat "$AGENTSCOMPANION_BOOTSTRAP_SCRIPT")' ]; then
+  printf 'Unexpected in-shell one-liner: %s\n' "$PASTE_ONE_LINER" >&2
   exit 1
 fi
 
@@ -57,6 +62,22 @@ verify_output="$(eval "$VERIFY_ONE_LINER")"
 
 if [[ "$verify_output" != *"copilot is a function"* ]]; then
   printf 'Expected verify command to show copilot wrapper, got:\n%s\n' "$verify_output" >&2
+  exit 1
+fi
+
+rm -rf "$SANDBOX_HOME/.agentscompanion" "$SANDBOX_HOME/.bashrc" "$SANDBOX_HOME/.bashrc.agentscompanion.bak"
+
+paste_output="$(
+  HOME="$SANDBOX_HOME" \
+  AGENTSCOMPANION_LOCAL_SOURCE_DIR="$STAGED_RELEASE" \
+  AGENTSCOMPANION_INSTALL_DIR="$SANDBOX_HOME/.agentscompanion" \
+  AGENTSCOMPANION_RC_FILE="$SANDBOX_HOME/.bashrc" \
+  AGENTSCOMPANION_BOOTSTRAP_SCRIPT="$BOOTSTRAP_SCRIPT" \
+  bash -lc "$PASTE_ONE_LINER"
+)"
+
+if [[ "$paste_output" != *"Installed agentscompanion into"* ]]; then
+  printf 'Expected in-shell one-liner to install successfully, got:\n%s\n' "$paste_output" >&2
   exit 1
 fi
 

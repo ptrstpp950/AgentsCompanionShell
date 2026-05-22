@@ -75,10 +75,11 @@ Prepare an isolated install sandbox and get a copy-based one-liner you can paste
 
 ```bash
 bash tests/prepare_install_sandbox.sh
+bash tests/prepare_install_sandbox.sh --open-shell
 ```
 
-That helper now emits a local bootstrap command shaped like:
+Inside the opened shell, the short command to paste is:
 
 ```bash
-bash <(cat /path/to/bootstrap.sh)
+bash <(cat "$AGENTSCOMPANION_BOOTSTRAP_SCRIPT")
 ```
