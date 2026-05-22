@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# agentscompanion install version: 0.1.1
 
 set -euo pipefail
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# agentscompanion runtime version: 0.1.1
 
 _agentscompanion_is_sourced() {
   if [ -n "${BASH_VERSION:-}" ]; then
