@@ -69,3 +69,9 @@ Create an isolated manual sandbox without touching your real shell config:
 bash tests/sandbox_manual_test.sh
 bash tests/sandbox_manual_test.sh --open-shell
 ```
+
+Prepare an isolated install sandbox and get a copy-based one-liner you can paste:
+
+```bash
+bash tests/prepare_install_sandbox.sh
+```

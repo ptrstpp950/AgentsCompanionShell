@@ -3,8 +3,9 @@
 ## Test commands
 
 - Run the full test suite with `./tests/run.sh`
-- Run a single test with `bash tests/test_install.sh`, `bash tests/test_agentscompanion.sh`, `bash tests/test_tmux_launch.sh`, or `bash tests/test_zsh.sh`
+- Run a single test with `bash tests/test_install.sh`, `bash tests/test_agentscompanion.sh`, `bash tests/test_tmux_launch.sh`, `bash tests/test_zsh.sh`, or `bash tests/test_prepare_install_sandbox.sh`
 - Use `bash tests/sandbox_manual_test.sh` when you need a manual sandbox flow that does not touch the real shell config
+- Use `bash tests/prepare_install_sandbox.sh` when you want a staged fake HOME plus a pasteable local install one-liner that simulates the future curl/wget UX
 
 ## High-level architecture
 
