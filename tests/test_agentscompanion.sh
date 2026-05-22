@@ -68,6 +68,7 @@ copilot chat --model gpt-5.4 "hello world"
 single_launch_log="$(cat "$log_file")"
 
 assert_contains "$single_launch_log" "__CALL__"
+assert_contains "$single_launch_log" "-a"
 assert_contains "$single_launch_log" "-c"
 assert_contains "$single_launch_log" "$tmp_dir"
 assert_contains "$single_launch_log" "$fake_bin_dir/copilot"
@@ -91,6 +92,7 @@ fi
 assert_contains "$multi_launch_log" "$fake_bin_dir/copilot"
 assert_contains "$multi_launch_log" "$fake_bin_dir/codex"
 assert_contains "$multi_launch_log" "coordinator"
+assert_contains "$multi_launch_log" "-a"
 
 version_output="$(bash "$repo_dir/agentscompanion.sh" --version)"
 

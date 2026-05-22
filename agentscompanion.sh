@@ -159,21 +159,40 @@ _agentscompanion_default_shell() {
   printf '/bin/sh\n'
 }
 
+_agentscompanion_should_attach() {
+  case "${AGENTSCOMPANION_AUTO_ATTACH:-1}" in
+    0|false|FALSE|no|NO)
+      return 1
+      ;;
+  esac
+
+  return 0
+}
+
 _agentscompanion_launch_with_session() {
   local role="$1"
+  local attach_mode="$2"
+  shift
   shift
 
   local launcher
   local session_name
+  local attach_args=()
 
   launcher="$(_agentscompanion_tmux_launcher)"
   session_name="$(_agentscompanion_session_name "$role")"
 
-  "$launcher" -c "$PWD" -s "$session_name" -- "$@"
+  if [ "$attach_mode" = "attach" ]; then
+    attach_args=(-a)
+  fi
+
+  "$launcher" "${attach_args[@]}" -c "$PWD" -s "$session_name" -- "$@"
 }
 
 _agentscompanion_launch_agent() {
   local agent_name="$1"
+  local attach_mode="${2:-attach}"
+  shift
   shift
 
   local binary_path
@@ -183,16 +202,19 @@ _agentscompanion_launch_agent() {
     return 1
   fi
 
-  _agentscompanion_launch_with_session "$agent_name" "$binary_path" "$@"
+  _agentscompanion_launch_with_session "$agent_name" "$attach_mode" "$binary_path" "$@"
 }
 
 _agentscompanion_launch_coordinator() {
+  local attach_mode="${1:-attach}"
+  shift || true
+
   if [ "$#" -eq 0 ]; then
-    _agentscompanion_launch_with_session coordinator "$(_agentscompanion_default_shell)"
+    _agentscompanion_launch_with_session coordinator "$attach_mode" "$(_agentscompanion_default_shell)"
     return $?
   fi
 
-  _agentscompanion_launch_with_session coordinator "$@"
+  _agentscompanion_launch_with_session coordinator "$attach_mode" "$@"
 }
 
 _agentscompanion_list_agents() {
@@ -239,11 +261,19 @@ agentscompanion() {
 
       local agent_name="$1"
       shift
-      _agentscompanion_launch_agent "$agent_name" "$@"
+      if _agentscompanion_should_attach; then
+        _agentscompanion_launch_agent "$agent_name" attach "$@"
+      else
+        _agentscompanion_launch_agent "$agent_name" detach "$@"
+      fi
       ;;
     launch-coordinator)
       shift || true
-      _agentscompanion_launch_coordinator "$@"
+      if _agentscompanion_should_attach; then
+        _agentscompanion_launch_coordinator attach "$@"
+      else
+        _agentscompanion_launch_coordinator detach "$@"
+      fi
       ;;
     launch-set)
       local agent_name
@@ -254,11 +284,15 @@ agentscompanion() {
         set -- copilot codex claude
       fi
 
-      _agentscompanion_launch_coordinator || return 1
-
       for agent_name in "$@"; do
-        _agentscompanion_launch_agent "$agent_name" || return 1
+        _agentscompanion_launch_agent "$agent_name" detach || return 1
       done
+
+      if _agentscompanion_should_attach; then
+        _agentscompanion_launch_coordinator attach || return 1
+      else
+        _agentscompanion_launch_coordinator detach || return 1
+      fi
       ;;
     *)
       printf 'Error: unknown agentscompanion command: %s\n' "$command_name" >&2
@@ -269,15 +303,27 @@ agentscompanion() {
 }
 
 copilot() {
-  _agentscompanion_launch_agent copilot "$@"
+  if _agentscompanion_should_attach; then
+    _agentscompanion_launch_agent copilot attach "$@"
+  else
+    _agentscompanion_launch_agent copilot detach "$@"
+  fi
 }
 
 codex() {
-  _agentscompanion_launch_agent codex "$@"
+  if _agentscompanion_should_attach; then
+    _agentscompanion_launch_agent codex attach "$@"
+  else
+    _agentscompanion_launch_agent codex detach "$@"
+  fi
 }
 
 claude() {
-  _agentscompanion_launch_agent claude "$@"
+  if _agentscompanion_should_attach; then
+    _agentscompanion_launch_agent claude attach "$@"
+  else
+    _agentscompanion_launch_agent claude detach "$@"
+  fi
 }
 
 if ! _agentscompanion_is_sourced; then
