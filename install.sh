@@ -5,6 +5,9 @@ set -euo pipefail
 install_dir="${AGENTSCOMPANION_INSTALL_DIR:-$HOME/.agentscompanion}"
 base_url="${AGENTSCOMPANION_BASE_URL:-}"
 rc_file=""
+color_success=""
+color_heading=""
+color_reset=""
 
 usage() {
   cat <<'EOF'
@@ -20,7 +23,16 @@ Options:
 EOF
 }
 
+setup_colors() {
+  if [ -t 1 ]; then
+    color_success=$'\033[1;32m'
+    color_heading=$'\033[1;36m'
+    color_reset=$'\033[0m'
+  fi
+}
+
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+setup_colors
 
 print_tmux_note() {
   if command -v tmux >/dev/null 2>&1; then
@@ -205,6 +217,6 @@ ensure_rc_file
 update_rc_file
 print_tmux_note
 
-printf '\nInstallation complete.\n'
-printf 'Use agentscompanion in this terminal:\n  source %q\n' "$rc_file"
+printf '\n%bInstallation complete.%b\n' "$color_success" "$color_reset"
+printf '%bUse agentscompanion in this terminal:%b\n  source %q\n' "$color_heading" "$color_reset" "$rc_file"
 printf 'New terminals will load agentscompanion automatically.\n'

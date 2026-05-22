@@ -7,6 +7,10 @@ install_dir="${AGENTSCOMPANION_INSTALL_DIR:-$HOME/.agentscompanion}"
 rc_file="${AGENTSCOMPANION_RC_FILE:-}"
 bootstrap_dir="$(mktemp -d "${TMPDIR:-/tmp}/agentscompanion-bootstrap.XXXXXX")"
 assume_yes="${AGENTSCOMPANION_ASSUME_YES:-0}"
+color_title=""
+color_heading=""
+color_note=""
+color_reset=""
 
 usage() {
   cat <<'EOF'
@@ -22,9 +26,18 @@ Options:
 EOF
 }
 
+setup_colors() {
+  if [ -t 1 ]; then
+    color_title=$'\033[1;36m'
+    color_heading=$'\033[1;32m'
+    color_note=$'\033[1;33m'
+    color_reset=$'\033[0m'
+  fi
+}
+
 print_plan() {
-  printf 'agentscompanion bootstrap\n\n'
-  printf 'This will:\n'
+  printf '%bagentscompanion bootstrap%b\n\n' "$color_title" "$color_reset"
+  printf '%bThis will:%b\n' "$color_heading" "$color_reset"
   printf '  - install agentscompanion into %s\n' "$install_dir"
 
   if [ -n "$rc_file" ]; then
@@ -44,7 +57,7 @@ confirm() {
     return 0
   fi
 
-  printf 'Continue? [y/N] '
+  printf '%bContinue? [y/N]%b ' "$color_note" "$color_reset"
   read -r answer
 
   case "$answer" in
@@ -63,6 +76,7 @@ cleanup() {
 }
 
 trap cleanup EXIT
+setup_colors
 
 while [ "$#" -gt 0 ]; do
   case "$1" in

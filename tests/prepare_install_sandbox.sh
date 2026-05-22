@@ -103,8 +103,21 @@ export AGENTSCOMPANION_INSTALL_DIR=$(printf '%q' "$install_dir")
 export AGENTSCOMPANION_RC_FILE=$(printf '%q' "$rc_file")
 export AGENTSCOMPANION_BOOTSTRAP_SCRIPT=$(printf '%q' "$bootstrap_script")
 
-printf 'Install sandbox shell ready. Paste this one-liner to review and confirm changes:\\n  %s\\n\\n' '$(printf '%s' "$paste_one_liner")'
-printf 'Skip confirmation with:\\n  %s\\n\\n' '$(printf '%s' "$paste_one_liner_yes")'
+if [ -t 1 ]; then
+  color_title=\$'\\033[1;36m'
+  color_heading=\$'\\033[1;32m'
+  color_note=\$'\\033[1;33m'
+  color_reset=\$'\\033[0m'
+else
+  color_title=''
+  color_heading=''
+  color_note=''
+  color_reset=''
+fi
+
+printf '%bInstall sandbox shell ready.%b\\n' "\$color_title" "\$color_reset"
+printf '%bPaste this one-liner to review and confirm changes:%b\\n  %s\\n\\n' "\$color_heading" "\$color_reset" '$(printf '%s' "$paste_one_liner")'
+printf '%bSkip confirmation with:%b\\n  %s\\n\\n' "\$color_note" "\$color_reset" '$(printf '%s' "$paste_one_liner_yes")'
 printf 'Then verify with:\\n  source %q\\n  agentscompanion --version\\n  type copilot\\n\\n' $(printf '%q' "$rc_file")
 printf 'Cleanup later with:\\n  %s\\n\\n' '$(printf '%s' "$cleanup_one_liner")'
 EOF
