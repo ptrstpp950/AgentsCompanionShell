@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# agentscompanion bootstrap version: 0.1.1
+# agentscompanion bootstrap version: 0.1.2
 
 set -euo pipefail
 

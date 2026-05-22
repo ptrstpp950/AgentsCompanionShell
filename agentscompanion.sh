@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# agentscompanion runtime version: 0.1.1
+# agentscompanion runtime version: 0.1.2
 
 _agentscompanion_is_sourced() {
   if [ -n "${BASH_VERSION:-}" ]; then
@@ -8,9 +8,8 @@ _agentscompanion_is_sourced() {
   fi
 
   if [ -n "${ZSH_VERSION:-}" ]; then
-    case "${ZSH_EVAL_CONTEXT:-}" in
-      *:file) return 0 ;;
-    esac
+    [ "${ZSH_ARGZERO:-$0}" != "$0" ]
+    return
   fi
 
   return 1
@@ -150,28 +149,21 @@ _agentscompanion_session_name() {
 
 _agentscompanion_find_binary() {
   local command_name="$1"
-  local old_ifs
-  local path_dir
   local candidate
 
-  old_ifs=$IFS
-  IFS=:
+  if [ -n "${BASH_VERSION:-}" ]; then
+    candidate="$(type -P -- "$command_name" 2>/dev/null)" || return 1
+  elif [ -n "${ZSH_VERSION:-}" ]; then
+    candidate="$(whence -p "$command_name" 2>/dev/null)" || return 1
+  else
+    candidate="$(command -v -- "$command_name" 2>/dev/null)" || return 1
+  fi
 
-  for path_dir in $PATH; do
-    if [ -z "$path_dir" ]; then
-      path_dir='.'
-    fi
+  if [ -n "$candidate" ] && [ -f "$candidate" ] && [ -x "$candidate" ]; then
+    printf '%s\n' "$candidate"
+    return 0
+  fi
 
-    candidate="$path_dir/$command_name"
-
-    if [ -f "$candidate" ] && [ -x "$candidate" ]; then
-      IFS=$old_ifs
-      printf '%s\n' "$candidate"
-      return 0
-    fi
-  done
-
-  IFS=$old_ifs
   return 1
 }
 
@@ -202,16 +194,16 @@ _agentscompanion_launch_with_session() {
 
   local launcher
   local session_name
-  local attach_args=()
 
   launcher="$(_agentscompanion_tmux_launcher)"
   session_name="$(_agentscompanion_session_name "$role")"
 
   if [ "$attach_mode" = "attach" ]; then
-    attach_args=(-a)
+    "$launcher" -a -c "$PWD" -s "$session_name" -- "$@"
+    return $?
   fi
 
-  "$launcher" "${attach_args[@]}" -c "$PWD" -s "$session_name" -- "$@"
+  "$launcher" -c "$PWD" -s "$session_name" -- "$@"
 }
 
 _agentscompanion_launch_agent() {
