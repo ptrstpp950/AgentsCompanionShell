@@ -205,6 +205,7 @@ ensure_rc_file
 update_rc_file
 print_tmux_note
 
-printf 'Installed agentscompanion into %s\n' "$install_dir"
-printf 'Updated rc file: %s\n' "$rc_file"
-printf 'Reload with: source %q\n' "$rc_file"
+printf '\nInstallation complete.\n'
+printf 'Install location:\n  %s\n' "$install_dir"
+printf 'Shell rc file updated:\n  %s\n' "$rc_file"
+printf 'Next step:\n  source %q\n' "$rc_file"

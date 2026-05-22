@@ -25,8 +25,6 @@ EOF
 print_plan() {
   printf 'agentscompanion bootstrap\n\n'
   printf 'This will:\n'
-  printf '  - read the staged release from %s\n' "$source_dir"
-  printf '  - copy it into a temporary bootstrap directory\n'
   printf '  - install agentscompanion into %s\n' "$install_dir"
 
   if [ -n "$rc_file" ]; then
