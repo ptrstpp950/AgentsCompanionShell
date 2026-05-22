@@ -4,6 +4,7 @@
 
 - Run the full test suite with `./tests/run.sh`
 - Run a single test with `bash tests/test_install.sh`, `bash tests/test_agentscompanion.sh`, `bash tests/test_tmux_launch.sh`, or `bash tests/test_zsh.sh`
+- Use `bash tests/sandbox_manual_test.sh` when you need a manual sandbox flow that does not touch the real shell config
 
 ## High-level architecture
 

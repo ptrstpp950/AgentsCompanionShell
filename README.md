@@ -60,3 +60,10 @@ Run a single test:
 bash tests/test_install.sh
 bash tests/test_zsh.sh
 ```
+
+Create an isolated manual sandbox without touching your real shell config:
+
+```bash
+bash tests/sandbox_manual_test.sh
+bash tests/sandbox_manual_test.sh --open-shell
+```
