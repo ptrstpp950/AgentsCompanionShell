@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# agentscompanion runtime version: 0.1.3
+# agentscompanion runtime version: 0.1.4
 
 _agentscompanion_is_sourced() {
   if [ -n "${BASH_VERSION:-}" ]; then
@@ -22,7 +22,7 @@ _agentscompanion_script_path() {
   fi
 
   if [ -n "${ZSH_VERSION:-}" ]; then
-    printf '%s\n' "${(%):-%N}"
+    printf '%s\n' "${(%):-%x}"
     return 0
   fi
 
