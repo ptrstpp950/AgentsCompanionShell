@@ -46,6 +46,7 @@ agentscompanion launch-set copilot codex claude
 
 `agentscompanion launch-set` starts a coordinator shell session plus one tmux session per agent in the current directory.
 Single-agent wrappers like `copilot` auto-attach to the new tmux session by default.
+Session names use the pattern `agent-project`, then `agent-1-project`, `agent-2-project`, and so on if a name is already taken.
 
 ## Tests
 

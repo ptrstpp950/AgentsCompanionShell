@@ -113,14 +113,38 @@ _agentscompanion_project_name() {
   printf '%s\n' "$project_name"
 }
 
-_agentscompanion_session_name() {
+_agentscompanion_session_base_name() {
   local role="$1"
-  local timestamp
 
-  timestamp="$(date +%Y%m%d-%H%M%S)"
   role="$(_agentscompanion_sanitize_name "$role")"
 
-  printf '%s-%s-%s-%s\n' "$(_agentscompanion_project_name)" "${role:-session}" "$timestamp" "$$"
+  if [ -z "$role" ]; then
+    role="session"
+  fi
+
+  printf '%s-%s\n' "$role" "$(_agentscompanion_project_name)"
+}
+
+_agentscompanion_session_name() {
+  local role="$1"
+  local base_name
+  local candidate
+  local index=1
+
+  base_name="$(_agentscompanion_session_base_name "$role")"
+  candidate="$base_name"
+
+  if ! command -v tmux >/dev/null 2>&1; then
+    printf '%s\n' "$candidate"
+    return 0
+  fi
+
+  while tmux has-session -t "$candidate" 2>/dev/null; do
+    candidate="$role-$index-$(_agentscompanion_project_name)"
+    index=$((index + 1))
+  done
+
+  printf '%s\n' "$candidate"
 }
 
 _agentscompanion_find_binary() {

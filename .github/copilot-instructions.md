@@ -10,6 +10,7 @@
 
 - `agentscompanion.sh` is the sourceable entrypoint loaded from a shell rc file. It defines the native wrappers (`copilot`, `codex`, `claude`) and the `agentscompanion` dispatcher used for version checks and multi-agent launch commands.
 - Single-agent wrappers auto-attach to the new tmux session by default. `launch-set` starts the agent sessions first, then attaches to the coordinator session.
+- Wrapper-created session names follow `role-project`, with numeric suffixes inserted only when a name is already taken (`copilot-project`, `copilot-1-project`, ...).
 - `lib/tmux-launch.sh` is the standalone tmux launcher. Keep tmux/session management there rather than inside the sourced shell file so the interactive shell environment stays stable across bash and zsh.
 - `install.sh` owns installation into `~/.agentscompanion` and updates a chosen rc file with a marked source block. It is designed for both local installs and future curl/wget installs by supporting `AGENTSCOMPANION_BASE_URL`.
 

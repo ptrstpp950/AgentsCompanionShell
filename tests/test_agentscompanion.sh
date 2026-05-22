@@ -12,6 +12,24 @@ cleanup() {
   rm -rf "$tmp_dir"
 }
 
+sanitize_name() {
+  local value="${1:-}"
+
+  value="${value//[^[:alnum:]_-]/-}"
+
+  while [[ -n "$value" && ( "${value#-}" != "$value" || "${value#_}" != "$value" ) ]]; do
+    value="${value#-}"
+    value="${value#_}"
+  done
+
+  while [[ -n "$value" && ( "${value%-}" != "$value" || "${value%_}" != "$value" ) ]]; do
+    value="${value%-}"
+    value="${value%_}"
+  done
+
+  printf '%s\n' "$value"
+}
+
 assert_contains() {
   local haystack="$1"
   local needle="$2"
@@ -25,6 +43,9 @@ assert_contains() {
 trap cleanup EXIT
 
 mkdir -p "$fake_bin_dir"
+
+project_name="$(sanitize_name "$(basename "$tmp_dir")")"
+base_session_name="copilot-$project_name"
 
 cat >"$fake_launcher" <<'EOF'
 #!/usr/bin/env bash
@@ -64,6 +85,15 @@ if [ "$before_shell_flags" != "$after_shell_flags" ]; then
   exit 1
 fi
 
+tmux new-session -d -s "$base_session_name" sleep 30
+collision_session_name="$(_agentscompanion_session_name copilot)"
+tmux kill-session -t "$base_session_name"
+
+if [ "$collision_session_name" != "copilot-1-$project_name" ]; then
+  printf 'Unexpected collision session name: %s\n' "$collision_session_name" >&2
+  exit 1
+fi
+
 copilot chat --model gpt-5.4 "hello world"
 single_launch_log="$(cat "$log_file")"
 
@@ -76,7 +106,7 @@ assert_contains "$single_launch_log" "chat"
 assert_contains "$single_launch_log" "--model"
 assert_contains "$single_launch_log" "gpt-5.4"
 assert_contains "$single_launch_log" "hello world"
-assert_contains "$single_launch_log" "copilot"
+assert_contains "$single_launch_log" "copilot-$project_name"
 
 printf '' >"$log_file"
 
@@ -91,7 +121,7 @@ fi
 
 assert_contains "$multi_launch_log" "$fake_bin_dir/copilot"
 assert_contains "$multi_launch_log" "$fake_bin_dir/codex"
-assert_contains "$multi_launch_log" "coordinator"
+assert_contains "$multi_launch_log" "coordinator-$project_name"
 assert_contains "$multi_launch_log" "-a"
 
 version_output="$(bash "$repo_dir/agentscompanion.sh" --version)"
