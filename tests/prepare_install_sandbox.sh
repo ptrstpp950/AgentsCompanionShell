@@ -63,22 +63,22 @@ esac
 
 sandbox_home="$sandbox_root/home"
 release_dir="$sandbox_root/release"
-bootstrap_dir="$sandbox_home/.agentscompanion-bootstrap"
 install_dir="$sandbox_home/.agentscompanion"
+bootstrap_script="$release_dir/bootstrap.sh"
 
 mkdir -p "$sandbox_home" "$release_dir/lib"
 touch "$rc_file"
 
+cp "$repo_dir/bootstrap.sh" "$release_dir/bootstrap.sh"
 cp "$repo_dir/install.sh" "$release_dir/install.sh"
 cp "$repo_dir/agentscompanion.sh" "$release_dir/agentscompanion.sh"
 cp "$repo_dir/VERSION" "$release_dir/VERSION"
 cp "$repo_dir/lib/tmux-launch.sh" "$release_dir/lib/tmux-launch.sh"
 
-chmod +x "$release_dir/install.sh" "$release_dir/agentscompanion.sh" "$release_dir/lib/tmux-launch.sh"
+chmod +x "$release_dir/bootstrap.sh" "$release_dir/install.sh" "$release_dir/agentscompanion.sh" "$release_dir/lib/tmux-launch.sh"
 
-printf -v install_script 'rm -rf %q && mkdir -p %q && cp -R %q/. %q && AGENTSCOMPANION_INSTALL_DIR=%q bash %q --rc-file %q' \
-  "$bootstrap_dir" "$bootstrap_dir" "$release_dir" "$bootstrap_dir" "$install_dir" "$bootstrap_dir/install.sh" "$rc_file"
-printf -v install_one_liner 'HOME=%q bash -lc %q' "$sandbox_home" "$install_script"
+printf -v install_one_liner 'HOME=%q AGENTSCOMPANION_LOCAL_SOURCE_DIR=%q AGENTSCOMPANION_INSTALL_DIR=%q AGENTSCOMPANION_RC_FILE=%q bash <(cat %q)' \
+  "$sandbox_home" "$release_dir" "$install_dir" "$rc_file" "$bootstrap_script"
 
 verify_script="$(join_command "${verify_command[@]}")"
 printf -v verify_one_liner 'HOME=%q %s' "$sandbox_home" "$verify_script"
@@ -93,6 +93,9 @@ Home:
 Staged release:
   $release_dir
 
+Bootstrap script:
+  $bootstrap_script
+
 Install one-liner:
   $install_one_liner
 
@@ -106,6 +109,7 @@ Machine-readable values:
 SANDBOX_ROOT=$(printf '%q' "$sandbox_root")
 SANDBOX_HOME=$(printf '%q' "$sandbox_home")
 STAGED_RELEASE=$(printf '%q' "$release_dir")
+BOOTSTRAP_SCRIPT=$(printf '%q' "$bootstrap_script")
 INSTALL_ONE_LINER=$(printf '%q' "$install_one_liner")
 VERIFY_ONE_LINER=$(printf '%q' "$verify_one_liner")
 CLEANUP_ONE_LINER=$(printf '%q' "$cleanup_one_liner")

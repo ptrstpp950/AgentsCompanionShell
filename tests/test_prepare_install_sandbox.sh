@@ -14,11 +14,12 @@ trap cleanup EXIT
 bash "$repo_dir/tests/prepare_install_sandbox.sh" >"$output_file"
 
 eval "$(
-  grep -E '^(SANDBOX_ROOT|SANDBOX_HOME|STAGED_RELEASE|INSTALL_ONE_LINER|VERIFY_ONE_LINER|CLEANUP_ONE_LINER)=' "$output_file"
+  grep -E '^(SANDBOX_ROOT|SANDBOX_HOME|STAGED_RELEASE|BOOTSTRAP_SCRIPT|INSTALL_ONE_LINER|VERIFY_ONE_LINER|CLEANUP_ONE_LINER)=' "$output_file"
 )"
 
 for path in \
   "$STAGED_RELEASE/install.sh" \
+  "$BOOTSTRAP_SCRIPT" \
   "$STAGED_RELEASE/agentscompanion.sh" \
   "$STAGED_RELEASE/VERSION" \
   "$STAGED_RELEASE/lib/tmux-launch.sh"
@@ -28,6 +29,11 @@ do
     exit 1
   fi
 done
+
+if [[ "$INSTALL_ONE_LINER" != *"bash <("* ]]; then
+  printf 'Expected install one-liner to use bash <(...), got:\n%s\n' "$INSTALL_ONE_LINER" >&2
+  exit 1
+fi
 
 eval "$INSTALL_ONE_LINER" >/tmp/agentscompanion-install-sandbox.out
 

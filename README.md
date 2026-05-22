@@ -5,6 +5,7 @@
 ## Project layout
 
 - `agentscompanion.sh` is the sourceable top-level entrypoint.
+- `bootstrap.sh` is the bootstrap script intended for `bash <(...)` install flows.
 - `lib/tmux-launch.sh` is the standalone tmux launcher used by the wrappers.
 - `install.sh` installs the tool into `~/.agentscompanion` and adds a `source` block to a chosen shell rc file.
 - `tests/` contains the shell test suite.
@@ -74,4 +75,10 @@ Prepare an isolated install sandbox and get a copy-based one-liner you can paste
 
 ```bash
 bash tests/prepare_install_sandbox.sh
+```
+
+That helper now emits a local bootstrap command shaped like:
+
+```bash
+bash <(cat /path/to/bootstrap.sh)
 ```
