@@ -83,3 +83,5 @@ Inside the opened shell, the short command to paste is:
 ```bash
 bash <(cat "$AGENTSCOMPANION_BOOTSTRAP_SCRIPT")
 ```
+
+That flow now explains what will change and asks for confirmation. For a non-interactive run, append `--yes`.

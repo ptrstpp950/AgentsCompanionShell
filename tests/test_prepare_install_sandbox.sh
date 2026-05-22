@@ -14,7 +14,7 @@ trap cleanup EXIT
 bash "$repo_dir/tests/prepare_install_sandbox.sh" >"$output_file"
 
 eval "$(
-  grep -E '^(SANDBOX_ROOT|SANDBOX_HOME|STAGED_RELEASE|BOOTSTRAP_SCRIPT|PASTE_ONE_LINER|INSTALL_ONE_LINER|VERIFY_ONE_LINER|CLEANUP_ONE_LINER)=' "$output_file"
+  grep -E '^(SANDBOX_ROOT|SANDBOX_HOME|STAGED_RELEASE|BOOTSTRAP_SCRIPT|PASTE_ONE_LINER|PASTE_ONE_LINER_YES|INSTALL_ONE_LINER|INSTALL_ONE_LINER_YES|VERIFY_ONE_LINER|CLEANUP_ONE_LINER)=' "$output_file"
 )"
 
 for path in \
@@ -40,7 +40,22 @@ if [ "$PASTE_ONE_LINER" != 'bash <(cat "$AGENTSCOMPANION_BOOTSTRAP_SCRIPT")' ]; 
   exit 1
 fi
 
-eval "$INSTALL_ONE_LINER" >/tmp/agentscompanion-install-sandbox.out
+if [ "$PASTE_ONE_LINER_YES" != 'bash <(cat "$AGENTSCOMPANION_BOOTSTRAP_SCRIPT") --yes' ]; then
+  printf 'Unexpected in-shell no-prompt one-liner: %s\n' "$PASTE_ONE_LINER_YES" >&2
+  exit 1
+fi
+
+if [[ "$INSTALL_ONE_LINER_YES" != *"--yes" ]]; then
+  printf 'Expected standalone no-prompt one-liner to include --yes, got:\n%s\n' "$INSTALL_ONE_LINER_YES" >&2
+  exit 1
+fi
+
+install_output="$(printf 'y\n' | eval "$INSTALL_ONE_LINER")"
+
+if [[ "$install_output" != *"This will:"* ]] || [[ "$install_output" != *"Continue? [y/N]"* ]]; then
+  printf 'Expected install output to explain changes and ask for confirmation, got:\n%s\n' "$install_output" >&2
+  exit 1
+fi
 
 for path in \
   "$SANDBOX_HOME/.agentscompanion/agentscompanion.sh" \
@@ -73,7 +88,7 @@ paste_output="$(
   AGENTSCOMPANION_INSTALL_DIR="$SANDBOX_HOME/.agentscompanion" \
   AGENTSCOMPANION_RC_FILE="$SANDBOX_HOME/.bashrc" \
   AGENTSCOMPANION_BOOTSTRAP_SCRIPT="$BOOTSTRAP_SCRIPT" \
-  bash -lc "$PASTE_ONE_LINER"
+  bash -lc "$PASTE_ONE_LINER_YES"
 )"
 
 if [[ "$paste_output" != *"Installed agentscompanion into"* ]]; then

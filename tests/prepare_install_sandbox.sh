@@ -75,6 +75,7 @@ release_dir="$sandbox_root/release"
 install_dir="$sandbox_home/.agentscompanion"
 bootstrap_script="$release_dir/bootstrap.sh"
 paste_one_liner='bash <(cat "$AGENTSCOMPANION_BOOTSTRAP_SCRIPT")'
+paste_one_liner_yes='bash <(cat "$AGENTSCOMPANION_BOOTSTRAP_SCRIPT") --yes'
 
 mkdir -p "$sandbox_home" "$release_dir/lib" "$(dirname "$session_rc")"
 touch "$rc_file"
@@ -89,6 +90,8 @@ chmod +x "$release_dir/bootstrap.sh" "$release_dir/install.sh" "$release_dir/age
 
 printf -v install_one_liner 'HOME=%q AGENTSCOMPANION_LOCAL_SOURCE_DIR=%q AGENTSCOMPANION_INSTALL_DIR=%q AGENTSCOMPANION_RC_FILE=%q bash <(cat %q)' \
   "$sandbox_home" "$release_dir" "$install_dir" "$rc_file" "$bootstrap_script"
+printf -v install_one_liner_yes 'HOME=%q AGENTSCOMPANION_LOCAL_SOURCE_DIR=%q AGENTSCOMPANION_INSTALL_DIR=%q AGENTSCOMPANION_RC_FILE=%q bash <(cat %q) --yes' \
+  "$sandbox_home" "$release_dir" "$install_dir" "$rc_file" "$bootstrap_script"
 
 verify_script="$(join_command "${verify_command[@]}")"
 printf -v verify_one_liner 'HOME=%q %s' "$sandbox_home" "$verify_script"
@@ -100,7 +103,8 @@ export AGENTSCOMPANION_INSTALL_DIR=$(printf '%q' "$install_dir")
 export AGENTSCOMPANION_RC_FILE=$(printf '%q' "$rc_file")
 export AGENTSCOMPANION_BOOTSTRAP_SCRIPT=$(printf '%q' "$bootstrap_script")
 
-printf 'Install sandbox shell ready. Paste this one-liner:\\n  %s\\n\\n' '$(printf '%s' "$paste_one_liner")'
+printf 'Install sandbox shell ready. Paste this one-liner to review and confirm changes:\\n  %s\\n\\n' '$(printf '%s' "$paste_one_liner")'
+printf 'Skip confirmation with:\\n  %s\\n\\n' '$(printf '%s' "$paste_one_liner_yes")'
 printf 'Then verify with:\\n  source %q\\n  agentscompanion --version\\n  type copilot\\n\\n' $(printf '%q' "$rc_file")
 printf 'Cleanup later with:\\n  %s\\n\\n' '$(printf '%s' "$cleanup_one_liner")'
 EOF
@@ -123,8 +127,14 @@ Open sandbox shell:
 Paste inside the sandbox shell:
   $paste_one_liner
 
+Skip confirmation inside the sandbox shell:
+  $paste_one_liner_yes
+
 Standalone install one-liner:
   $install_one_liner
+
+Standalone install one-liner without confirmation:
+  $install_one_liner_yes
 
 Verify after install:
   $verify_one_liner
@@ -138,7 +148,9 @@ SANDBOX_HOME=$(printf '%q' "$sandbox_home")
 STAGED_RELEASE=$(printf '%q' "$release_dir")
 BOOTSTRAP_SCRIPT=$(printf '%q' "$bootstrap_script")
 PASTE_ONE_LINER=$(printf '%q' "$paste_one_liner")
+PASTE_ONE_LINER_YES=$(printf '%q' "$paste_one_liner_yes")
 INSTALL_ONE_LINER=$(printf '%q' "$install_one_liner")
+INSTALL_ONE_LINER_YES=$(printf '%q' "$install_one_liner_yes")
 VERIFY_ONE_LINER=$(printf '%q' "$verify_one_liner")
 CLEANUP_ONE_LINER=$(printf '%q' "$cleanup_one_liner")
 EOF
