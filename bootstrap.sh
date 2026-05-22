@@ -3,6 +3,9 @@
 set -euo pipefail
 
 source_dir="${AGENTSCOMPANION_LOCAL_SOURCE_DIR:-}"
+base_url="${AGENTSCOMPANION_BASE_URL:-}"
+github_repository="${AGENTSCOMPANION_GITHUB_REPOSITORY:-}"
+github_ref="${AGENTSCOMPANION_GITHUB_REF:-main}"
 install_dir="${AGENTSCOMPANION_INSTALL_DIR:-$HOME/.agentscompanion}"
 rc_file="${AGENTSCOMPANION_RC_FILE:-}"
 bootstrap_dir="$(mktemp -d "${TMPDIR:-/tmp}/agentscompanion-bootstrap.XXXXXX")"
@@ -18,7 +21,8 @@ Usage:
   bootstrap.sh [--yes]
 
 Bootstrap a local agentscompanion release into ~/.agentscompanion and update a
-shell rc file through install.sh.
+shell rc file through install.sh. The bootstrap script can fetch installer files
+from a base URL, such as GitHub raw content.
 
 Options:
   --yes    Skip the confirmation prompt
@@ -35,9 +39,48 @@ setup_colors() {
   fi
 }
 
+resolve_base_url() {
+  if [ -n "$base_url" ]; then
+    printf '%s\n' "$base_url"
+    return 0
+  fi
+
+  if [ -n "$github_repository" ]; then
+    printf 'https://raw.githubusercontent.com/%s/%s\n' "$github_repository" "$github_ref"
+    return 0
+  fi
+
+  return 1
+}
+
+describe_source() {
+  if [ -n "$source_dir" ]; then
+    printf 'the staged local release\n'
+    return 0
+  fi
+
+  resolved_base_url="$(resolve_base_url)" || {
+    printf 'the configured release source\n'
+    return 0
+  }
+
+  case "$resolved_base_url" in
+    file://*)
+      printf 'the staged sandbox bundle\n'
+      ;;
+    https://raw.githubusercontent.com/*)
+      printf 'GitHub\n'
+      ;;
+    *)
+      printf '%s\n' "$resolved_base_url"
+      ;;
+  esac
+}
+
 print_plan() {
   printf '%bagentscompanion bootstrap%b\n\n' "$color_title" "$color_reset"
   printf '%bThis will:%b\n' "$color_heading" "$color_reset"
+  printf '  - download installer files from %s\n' "$(describe_source)"
   printf '  - install agentscompanion into %s\n' "$install_dir"
 
   if [ -n "$rc_file" ]; then
@@ -71,6 +114,24 @@ confirm() {
   esac
 }
 
+download_file() {
+  local url="$1"
+  local destination_path="$2"
+
+  if command -v curl >/dev/null 2>&1; then
+    curl -fsSL "$url" -o "$destination_path"
+    return 0
+  fi
+
+  if command -v wget >/dev/null 2>&1; then
+    wget -qO "$destination_path" "$url"
+    return 0
+  fi
+
+  printf 'Error: curl or wget is required to download %s\n' "$url" >&2
+  exit 1
+}
+
 cleanup() {
   rm -rf "$bootstrap_dir"
 }
@@ -97,19 +158,19 @@ while [ "$#" -gt 0 ]; do
 done
 
 if [ -z "$source_dir" ]; then
-  printf 'Error: AGENTSCOMPANION_LOCAL_SOURCE_DIR must point to a staged release directory.\n' >&2
-  exit 1
-fi
-
-if [ ! -d "$source_dir" ]; then
-  printf 'Error: staged release directory does not exist: %s\n' "$source_dir" >&2
-  exit 1
+  if ! resolved_base_url="$(resolve_base_url)"; then
+    printf 'Error: set AGENTSCOMPANION_BASE_URL, AGENTSCOMPANION_GITHUB_REPOSITORY, or AGENTSCOMPANION_LOCAL_SOURCE_DIR.\n' >&2
+    exit 1
+  fi
+else
+  if [ ! -d "$source_dir" ]; then
+    printf 'Error: staged release directory does not exist: %s\n' "$source_dir" >&2
+    exit 1
+  fi
 fi
 
 print_plan
 confirm
-
-cp -R "$source_dir"/. "$bootstrap_dir"
 
 install_args=()
 
@@ -117,4 +178,11 @@ if [ -n "$rc_file" ]; then
   install_args+=(--rc-file "$rc_file")
 fi
 
-AGENTSCOMPANION_INSTALL_DIR="$install_dir" bash "$bootstrap_dir/install.sh" "${install_args[@]}"
+if [ -n "$source_dir" ]; then
+  cp -R "$source_dir"/. "$bootstrap_dir"
+  AGENTSCOMPANION_INSTALL_DIR="$install_dir" bash "$bootstrap_dir/install.sh" "${install_args[@]}"
+else
+  download_file "${resolved_base_url%/}/install.sh" "$bootstrap_dir/install.sh"
+  chmod +x "$bootstrap_dir/install.sh"
+  AGENTSCOMPANION_INSTALL_DIR="$install_dir" bash "$bootstrap_dir/install.sh" --base-url "$resolved_base_url" "${install_args[@]}"
+fi

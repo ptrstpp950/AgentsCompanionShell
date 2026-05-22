@@ -74,6 +74,7 @@ sandbox_home="$sandbox_root/home"
 release_dir="$sandbox_root/release"
 install_dir="$sandbox_home/.agentscompanion"
 bootstrap_script="$release_dir/bootstrap.sh"
+base_url="file://$release_dir"
 paste_one_liner='bash <(cat "$AGENTSCOMPANION_BOOTSTRAP_SCRIPT")'
 paste_one_liner_yes='bash <(cat "$AGENTSCOMPANION_BOOTSTRAP_SCRIPT") --yes'
 
@@ -88,17 +89,17 @@ cp "$repo_dir/lib/tmux-launch.sh" "$release_dir/lib/tmux-launch.sh"
 
 chmod +x "$release_dir/bootstrap.sh" "$release_dir/install.sh" "$release_dir/agentscompanion.sh" "$release_dir/lib/tmux-launch.sh"
 
-printf -v install_one_liner 'HOME=%q AGENTSCOMPANION_LOCAL_SOURCE_DIR=%q AGENTSCOMPANION_INSTALL_DIR=%q AGENTSCOMPANION_RC_FILE=%q bash <(cat %q)' \
-  "$sandbox_home" "$release_dir" "$install_dir" "$rc_file" "$bootstrap_script"
-printf -v install_one_liner_yes 'HOME=%q AGENTSCOMPANION_LOCAL_SOURCE_DIR=%q AGENTSCOMPANION_INSTALL_DIR=%q AGENTSCOMPANION_RC_FILE=%q bash <(cat %q) --yes' \
-  "$sandbox_home" "$release_dir" "$install_dir" "$rc_file" "$bootstrap_script"
+printf -v install_one_liner 'HOME=%q AGENTSCOMPANION_BASE_URL=%q AGENTSCOMPANION_INSTALL_DIR=%q AGENTSCOMPANION_RC_FILE=%q bash <(cat %q)' \
+  "$sandbox_home" "$base_url" "$install_dir" "$rc_file" "$bootstrap_script"
+printf -v install_one_liner_yes 'HOME=%q AGENTSCOMPANION_BASE_URL=%q AGENTSCOMPANION_INSTALL_DIR=%q AGENTSCOMPANION_RC_FILE=%q bash <(cat %q) --yes' \
+  "$sandbox_home" "$base_url" "$install_dir" "$rc_file" "$bootstrap_script"
 
 verify_script="$(join_command "${verify_command[@]}")"
 printf -v verify_one_liner 'HOME=%q %s' "$sandbox_home" "$verify_script"
 printf -v cleanup_one_liner 'rm -rf %q' "$sandbox_root"
 
 cat >"$session_rc" <<EOF
-export AGENTSCOMPANION_LOCAL_SOURCE_DIR=$(printf '%q' "$release_dir")
+export AGENTSCOMPANION_BASE_URL=$(printf '%q' "$base_url")
 export AGENTSCOMPANION_INSTALL_DIR=$(printf '%q' "$install_dir")
 export AGENTSCOMPANION_RC_FILE=$(printf '%q' "$rc_file")
 export AGENTSCOMPANION_BOOTSTRAP_SCRIPT=$(printf '%q' "$bootstrap_script")
@@ -159,6 +160,7 @@ Machine-readable values:
 SANDBOX_ROOT=$(printf '%q' "$sandbox_root")
 SANDBOX_HOME=$(printf '%q' "$sandbox_home")
 STAGED_RELEASE=$(printf '%q' "$release_dir")
+BASE_URL=$(printf '%q' "$base_url")
 BOOTSTRAP_SCRIPT=$(printf '%q' "$bootstrap_script")
 PASTE_ONE_LINER=$(printf '%q' "$paste_one_liner")
 PASTE_ONE_LINER_YES=$(printf '%q' "$paste_one_liner_yes")

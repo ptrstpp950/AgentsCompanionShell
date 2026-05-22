@@ -10,7 +10,7 @@
 ## High-level architecture
 
 - `agentscompanion.sh` is the sourceable entrypoint loaded from a shell rc file. It defines the native wrappers (`copilot`, `codex`, `claude`) and the `agentscompanion` dispatcher used for version checks and multi-agent launch commands.
-- `bootstrap.sh` is the lightweight bootstrap entrypoint for `bash <(...)` installation flows. It stages a local release bundle into a temp directory and hands off to `install.sh`.
+- `bootstrap.sh` is the lightweight bootstrap entrypoint for `bash <(...)` installation flows. It can fetch `install.sh` from a base URL such as GitHub raw content and then hand off to `install.sh`.
 - `bootstrap.sh` prints a change summary and asks for confirmation before editing the install directory or rc file; use `--yes` only for unattended flows and tests.
 - Single-agent wrappers auto-attach to the new tmux session by default. `launch-set` starts the agent sessions first, then attaches to the coordinator session.
 - Wrapper-created session names follow `role-project`, with numeric suffixes inserted only when a name is already taken (`copilot-project`, `copilot-1-project`, ...).

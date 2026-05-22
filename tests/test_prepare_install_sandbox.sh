@@ -14,7 +14,7 @@ trap cleanup EXIT
 bash "$repo_dir/tests/prepare_install_sandbox.sh" >"$output_file"
 
 eval "$(
-  grep -E '^(SANDBOX_ROOT|SANDBOX_HOME|STAGED_RELEASE|BOOTSTRAP_SCRIPT|PASTE_ONE_LINER|PASTE_ONE_LINER_YES|INSTALL_ONE_LINER|INSTALL_ONE_LINER_YES|VERIFY_ONE_LINER|CLEANUP_ONE_LINER)=' "$output_file"
+  grep -E '^(SANDBOX_ROOT|SANDBOX_HOME|STAGED_RELEASE|BASE_URL|BOOTSTRAP_SCRIPT|PASTE_ONE_LINER|PASTE_ONE_LINER_YES|INSTALL_ONE_LINER|INSTALL_ONE_LINER_YES|VERIFY_ONE_LINER|CLEANUP_ONE_LINER)=' "$output_file"
 )"
 
 for path in \
@@ -42,6 +42,11 @@ fi
 
 if [ "$PASTE_ONE_LINER_YES" != 'bash <(cat "$AGENTSCOMPANION_BOOTSTRAP_SCRIPT") --yes' ]; then
   printf 'Unexpected in-shell no-prompt one-liner: %s\n' "$PASTE_ONE_LINER_YES" >&2
+  exit 1
+fi
+
+if [[ "$BASE_URL" != file://* ]]; then
+  printf 'Expected sandbox base URL to use file://, got:\n%s\n' "$BASE_URL" >&2
   exit 1
 fi
 
@@ -84,7 +89,7 @@ rm -rf "$SANDBOX_HOME/.agentscompanion" "$SANDBOX_HOME/.bashrc" "$SANDBOX_HOME/.
 
 paste_output="$(
   HOME="$SANDBOX_HOME" \
-  AGENTSCOMPANION_LOCAL_SOURCE_DIR="$STAGED_RELEASE" \
+  AGENTSCOMPANION_BASE_URL="$BASE_URL" \
   AGENTSCOMPANION_INSTALL_DIR="$SANDBOX_HOME/.agentscompanion" \
   AGENTSCOMPANION_RC_FILE="$SANDBOX_HOME/.bashrc" \
   AGENTSCOMPANION_BOOTSTRAP_SCRIPT="$BOOTSTRAP_SCRIPT" \

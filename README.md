@@ -22,15 +22,15 @@ Or install into a custom target and update a specific rc file:
 AGENTSCOMPANION_INSTALL_DIR="$HOME/.agentscompanion" bash install.sh --rc-file "$HOME/.zshrc"
 ```
 
-## Future curl/wget installer shape
+## GitHub installer shape
 
-The installer already supports downloading files from a hosted base URL:
+The installer already supports downloading files from a hosted base URL. The intended public flow is a GitHub raw URL:
 
 ```bash
-curl -fsSL https://example.com/install.sh | AGENTSCOMPANION_BASE_URL="https://example.com/agentscompanion" bash -s -- --rc-file "$HOME/.zshrc"
+bash <(curl -fsSL https://raw.githubusercontent.com/OWNER/REPO/main/bootstrap.sh)
 ```
 
-Replace the placeholder URLs once the project is hosted.
+`bootstrap.sh` can then download `install.sh` and the runtime files from a GitHub raw base URL.
 
 ## Usage
 
